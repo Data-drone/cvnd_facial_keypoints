@@ -141,63 +141,122 @@ transformed_dataset = FacialKeypointsDataset(csv_file='data/training_frames_keyp
                                              transform=data_transform)
 
 # Parameter
-batch_size_set = 30
-n_epochs = 30
+n_epochs = 1
 
-# Train Loader
-train_loader = DataLoader(transformed_dataset,
-                          batch_size=batch_size_set,
-                          shuffle=True,
-                          num_workers=0)
+##### test param
+#####
+#####
+batch_sizes = [10, 20, 30, 40]
 
-# Test Loader
-# create the test dataset
-test_dataset = FacialKeypointsDataset(csv_file='data/test_frames_keypoints.csv',
-                                             root_dir='data/test/',
-                                             transform=data_transform)
+from models import Net_drop_more_layer
 
-test_loader = DataLoader(test_dataset,
-                          batch_size=batch_size_set,
-                          shuffle=True,
-                          num_workers=0)
+experiments = []
+for batch in batch_sizes:
 
-######################### network to use ##############
-from models import Net, Net_wo_drop, Net_drop_more_layer, NaimNet, Net_drop
+    # Train Loader
+    train_loader = DataLoader(transformed_dataset,
+                              batch_size=batch,
+                              shuffle=True,
+                              num_workers=0)
+
+    # Test Loader
+    # create the test dataset
+    test_dataset = FacialKeypointsDataset(csv_file='data/test_frames_keypoints.csv',
+                                                 root_dir='data/test/',
+                                                 transform=data_transform)
+
+    test_loader = DataLoader(test_dataset,
+                              batch_size=batch,
+                              shuffle=True,
+                              num_workers=0)
 
 ######################### Train Network ###############
 
-#
-models = {'Vanilla CNN': Net(),
-          'Vanilla Net no dropouts': Net_wo_drop(),
-          'Vanilla net with dropouts': Net_drop(),
-          'Vanilla net with more layers': Net_drop_more_layer(),
-          'NaimishNet': NaimNet()}
-
-experiments = []
-for model in models.keys():
-
     ########################## Make sure we have a fresh net each iteration
-    net = models[model]
+    net = Net_drop_more_layer()
 
     if torch.cuda.is_available():
         logger.debug('CUDA Training')
         net.to('cuda')
 
-    logger.info('running with model: {}'.format(model))
+    logger.info('running with batch: {}'.format(batch))
     criterion = nn.SmoothL1Loss()
     optimizer = optim.Adam(net.parameters(), lr=0.001, amsgrad=True)
 
     train_net(n_epochs, net, print_train = False)
     SmoothL1Loss, L1LossList, MSELossList = analyse_results(net)
 
-    print(model)
-    sns.distplot(SmoothL1Loss, label = model)
+    print('batch size is: {}'.format(batch))
+    sns.distplot(SmoothL1Loss, label = 'batch: {}'.format(batch))
 
     print('Smooth L1 {}'.format(np.mean(SmoothL1Loss)))
     print('L1 {}'.format(np.mean(L1LossList)))
     print('SME L1 {}'.format(np.mean(MSELossList)))
 
-    experiments.append({'name': model,
+    experiments.append({'name': 'batch: {}'.format(batch),
+                        'Smooth-L1': SmoothL1Loss,
+                        'L1': L1LossList,
+                        'SME': MSELossList})
+
+    del net
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+############################# Epoch test
+
+batch_size = 30
+
+# Train Loader
+train_loader = DataLoader(transformed_dataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              num_workers=0)
+
+# Test Loader
+# create the test dataset
+test_dataset = FacialKeypointsDataset(csv_file='data/test_frames_keypoints.csv',
+                                                 root_dir='data/test/',
+                                                 transform=data_transform)
+
+test_loader = DataLoader(test_dataset,
+                              batch_size=batch_size,
+                              shuffle=True,
+                              num_workers=0)
+
+
+##### test param
+#####
+#####
+n_epoch_test = [10, 20. 40, 80]
+
+
+for epoch_test in n_epoch_test:
+
+######################### Train Network ###############
+
+    ########################## Make sure we have a fresh net each iteration
+    net = Net_drop_more_layer()
+
+    if torch.cuda.is_available():
+        logger.debug('CUDA Training')
+        net.to('cuda')
+
+    logger.info('running with epoch: {}'.format(epoch_test))
+    criterion = nn.SmoothL1Loss()
+    optimizer = optim.Adam(net.parameters(), lr=0.001, amsgrad=True)
+
+    train_net(epoch_test, net, print_train = False)
+    SmoothL1Loss, L1LossList, MSELossList = analyse_results(net)
+
+    print('epochs are: {}'.format(epoch_test))
+    sns.distplot(SmoothL1Loss, label = 'epochs: {}'.format(epoch_test))
+
+    print('Smooth L1 {}'.format(np.mean(SmoothL1Loss)))
+    print('L1 {}'.format(np.mean(L1LossList)))
+    print('SME L1 {}'.format(np.mean(MSELossList)))
+
+    experiments.append({'name': 'epochs: {}'.format(epoch_test),
                         'Smooth-L1': SmoothL1Loss,
                         'L1': L1LossList,
                         'SME': MSELossList})
