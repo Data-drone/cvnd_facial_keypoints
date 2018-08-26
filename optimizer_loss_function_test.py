@@ -142,7 +142,7 @@ transformed_dataset = FacialKeypointsDataset(csv_file='data/training_frames_keyp
 
 # Parameter
 batch_size_set = 30
-n_epochs = 1
+n_epochs = 5
 
 # Train Loader
 train_loader = DataLoader(transformed_dataset,
@@ -173,8 +173,8 @@ if torch.cuda.is_available():
 ######################### Train Network ###############
 
 
-optimisation_list = {'Adam': optim.Adam(net.parameters(), lr=0.001),
-                     'RMSProp': optim.RMSprop(net.parameters()),
+optimisation_list = {'Adam': optim.Adam(net.parameters(), lr=0.001, amsgrad=True),
+                     'RMSProp': optim.RMSprop(net.parameters(), momentum=1e-3),
                      'SGD': optim.SGD(net.parameters(), lr=0.001)}
 
 criterion_list = {'Smooth-L1': nn.SmoothL1Loss(), 'L1-Loss': nn.L1Loss(), 'MSE-Loss': nn.MSELoss()}
