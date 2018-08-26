@@ -167,7 +167,7 @@ from models import Net
 net = Net()
 
 if torch.cuda.is_available():
-    logger.debug('CUDA Training')
+    #logger.debug('CUDA Training')
     net.to('cuda')
 
 ######################### Train Network ###############
@@ -191,7 +191,7 @@ for key in combination_list:
         logger.debug('CUDA Training')
         net.to('cuda')
 
-    logger.info('running with criterion: {}, optimisation: {}')
+    logger.info('running with criterion: {}, optimisation: {}'.format(key[0], key[1]))
     criterion = criterion_list[key[0]]
     optimizer = optimisation_list[key[1]]
 
