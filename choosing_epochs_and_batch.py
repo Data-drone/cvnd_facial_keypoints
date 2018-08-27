@@ -141,7 +141,7 @@ transformed_dataset = FacialKeypointsDataset(csv_file='data/training_frames_keyp
                                              transform=data_transform)
 
 # Parameter
-n_epochs = 1
+n_epochs = 15
 
 ##### test param
 #####
@@ -228,7 +228,7 @@ test_loader = DataLoader(test_dataset,
 ##### test param
 #####
 #####
-n_epoch_test = [10, 20. 40, 80]
+n_epoch_test = [10, 20, 40, 80]
 
 
 for epoch_test in n_epoch_test:
