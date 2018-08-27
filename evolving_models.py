@@ -62,12 +62,13 @@ def train_net(n_epochs, network,  print_train = True):
             # update the weights
             optimizer.step()
 
+            results.append([epoch + 1, batch_i + 1, loss.item()])
+
             # print loss statistics
             running_loss += loss.item()
             if batch_i % 10 == 9:    # print every 10 batches
                 if print_train:
                     logger.debug('Epoch: {}, Batch: {}, Avg. Loss: {}'.format(epoch + 1, batch_i +1, running_loss /10))
-                    results.append([epoch + 1, batch_i +1, running_loss /10])
                 running_loss = 0.0
 
     logger.info('Finished Training')
@@ -187,11 +188,11 @@ for model in models.keys():
     criterion = nn.SmoothL1Loss()
     optimizer = optim.Adam(net.parameters(), lr=0.001, amsgrad=True)
 
-    train_net(n_epochs, net, print_train = False)
+    train_stats = train_net(n_epochs, net, print_train = False)
     SmoothL1Loss, L1LossList, MSELossList = analyse_results(net)
 
     print(model)
-    sns.distplot(SmoothL1Loss, label = model)
+    #sns.distplot(SmoothL1Loss, label = model)
 
     print('Smooth L1 {}'.format(np.mean(SmoothL1Loss)))
     print('L1 {}'.format(np.mean(L1LossList)))
@@ -200,7 +201,8 @@ for model in models.keys():
     experiments.append({'name': model,
                         'Smooth-L1': SmoothL1Loss,
                         'L1': L1LossList,
-                        'SME': MSELossList})
+                        'SME': MSELossList,
+                        'train_progress': train_stats})
 
     del net
     if torch.cuda.is_available():
